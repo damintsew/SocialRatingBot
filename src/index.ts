@@ -1,9 +1,15 @@
 import {env} from "node:process";
-import {session, Telegraf} from "telegraf";
+import {Scenes, session, Telegraf} from "telegraf";
 import {ds} from "./db/data-source";
 import {User} from "./entity/User";
 import {MyContext} from "./domain/Domain";
+import {RatingService} from "./service/RatingService";
 
+(async function () {
+    await ds.initialize(); //todo get rid of this
+})()
+
+const ratingService = new RatingService()
 
 const token = env.TG_TOKEN
 if (token === undefined) {
@@ -12,11 +18,13 @@ if (token === undefined) {
 
 const bot = new Telegraf<MyContext>(token)
 
+const stage = new Scenes.Stage<MyContext>()
+
 bot.use(session())
-// bot.use(stage.middleware())
+bot.use(stage.middleware())
 bot.use(async (ctx, next) => {
 
-    if (!ctx?.session.isUserSaved) {
+    if (!ctx?.session?.isUserSaved) {
         if (ctx.message == null || ctx.message.from == null || ctx.message.from.id == null) {
             return next();
         }
@@ -35,6 +43,7 @@ bot.use(async (ctx, next) => {
             newUser.lastName = from.last_name
 
             newUser.isAdmin = from.id === 152984728;
+            newUser.isBlocked = false
 
             await ds.manager.save(newUser)
             ctx.session.user = newUser;
@@ -47,9 +56,30 @@ bot.use(async (ctx, next) => {
     return next()
 })
 
-bot.command('help', (ctx) => ctx.reply("/subscribe /list /unsubscribe"))
-bot.on('message',
-    (ctx) => ctx.reply("Для получения списка команд и моих возможностей введите /help."))
+bot.command('help', (ctx) => ctx.reply("/oleg"))
+bot.command('oleg', (ctx) => ctx.reply("Olegneochen"))
+
+bot.on('text', async (ctx) => {
+    console.log(ctx)
+    if (ctx.message.text == "баян") {
+        if (ctx.message.reply_to_message != null) {
+            let userId = ctx.message.reply_to_message.from.id
+            let username = ctx.message.reply_to_message.from.username
+            let chatId = ctx.message.reply_to_message.chat.id
+
+            await ratingService.remove(userId, chatId)
+            ctx.reply(`Принято. Твоя @${username} постить баян - расстраивать партия. Минус порция рис`)
+        } else {
+            ctx.reply("Для изменения рейтинга укажите какое сообщение 'баян'")
+        }
+    }
+})
+
+// bot.on('message_update', (ctx) => {
+//     console.log(ctx)
+// })
+
+// bot.on()
 
 bot.launch()
 

@@ -6,8 +6,8 @@ export class User {
     @PrimaryColumn()
     userId: number
 
-    @Column({nullable: true})
-    chatId: number
+    @Column({nullable: true, type: "bigint"})
+    chatId: string
 
     @Column({nullable: true})
     firstName: string;
@@ -24,7 +24,7 @@ export class User {
     @Column({nullable: true})
     lastUpdated: Date
 
-    @Column({nullable: false})
+    @Column({nullable: false, default: false})
     isBlocked: boolean
 
 }
