@@ -1,4 +1,4 @@
-import {Entity, PrimaryGeneratedColumn, Column, PrimaryColumn} from "typeorm";
+import {Entity, Column, PrimaryColumn} from "typeorm";
 
 @Entity()
 export class User {
@@ -7,7 +7,7 @@ export class User {
     userId: number
 
     @Column({nullable: true, type: "bigint"})
-    chatId: string
+    chatId: number
 
     @Column({nullable: true})
     firstName: string;
@@ -27,4 +27,17 @@ export class User {
     @Column({nullable: false, default: false})
     isBlocked: boolean
 
+}
+
+@Entity()
+export class UserSocialRating {
+
+    @PrimaryColumn()
+    userId: number
+
+    @Column({nullable: true, type: "bigint"})
+    chatId: number
+
+    @Column({nullable: false, type: "int"})
+    socialRating: number;
 }

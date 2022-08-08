@@ -1,15 +1,12 @@
 import {env} from "node:process";
 import {Scenes, session, Telegraf} from "telegraf";
-import {ds} from "./db/data-source";
-import {User} from "./entity/User";
 import {MyContext} from "./domain/Domain";
 import {RatingService} from "./service/RatingService";
+import {UserService} from "./service/UserService";
 
-(async function () {
-    await ds.initialize(); //todo get rid of this
-})()
 
 const ratingService = new RatingService()
+const userService = new UserService()
 
 const token = env.TG_TOKEN
 if (token === undefined) {
@@ -30,23 +27,9 @@ bot.use(async (ctx, next) => {
         }
         const from = ctx?.message?.from;
 
-        const userFromDB = await ds.manager.findOneBy(User, {userId: from.id});
+        const userFromDB = await userService.getUser(from.id, ctx.message.chat.id);
         if (userFromDB == null) {
-            //todo move to user service
-            const newUser = new User();
-
-            newUser.userId = from.id
-            // @ts-ignore
-            newUser.chatId = ctx.message.chat.id
-            newUser.username = from.username
-            newUser.firstName = from.first_name
-            newUser.lastName = from.last_name
-
-            newUser.isAdmin = from.id === 152984728;
-            newUser.isBlocked = false
-
-            await ds.manager.save(newUser)
-            ctx.session.user = newUser;
+            ctx.session.user = await userService.addUser(from);
         } else {
             ctx.session.user = userFromDB;
         }
@@ -56,8 +39,17 @@ bot.use(async (ctx, next) => {
     return next()
 })
 
-bot.command('help', (ctx) => ctx.reply("/oleg"))
-bot.command('oleg', (ctx) => ctx.reply("Olegneochen"))
+// bot.command('help', (ctx) => ctx.reply("/oleg"))
+// bot.command('oleg', (ctx) => ctx.reply("Olegneochen"))
+
+bot.command('raiting', async (ctx) => {
+    let userId = ctx.message.from.id;
+    let username = ctx.message.from.username
+    let chatId = ctx.message.chat.id
+    let rating = await ratingService.getUser(userId, chatId);
+    ctx.reply(`@${username} твой рейтинг ${rating}`)
+});
+
 
 bot.on('text', async (ctx) => {
     console.log(ctx)
@@ -66,8 +58,11 @@ bot.on('text', async (ctx) => {
             let userId = ctx.message.reply_to_message.from.id
             let username = ctx.message.reply_to_message.from.username
             let chatId = ctx.message.reply_to_message.chat.id
-
-            await ratingService.remove(userId, chatId)
+            const userWithRating = await ratingService.getUser(userId, chatId);
+            if (userWithRating == null) {
+                await ratingService.addUser(userId, chatId)
+            } 
+            await ratingService.changeUserRating(userId, chatId, -20)
             ctx.reply(`Принято. Твоя @${username} постить баян - расстраивать партия. Минус порция рис`)
         } else {
             ctx.reply("Для изменения рейтинга укажите какое сообщение 'баян'")
