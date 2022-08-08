@@ -8,33 +8,41 @@ export class RatingService {
     }
 
     async getUser(userId: number, chatId: number) {
-        return await dataSource.manager.findOneBy(UserSocialRating, {userId: userId, chatId: chatId});
+        return await dataSource.createQueryBuilder()
+            .select("user")
+            .from(UserSocialRating, "user")
+            .where("user.userId = :userId", { userId: userId.toString() })
+            .andWhere("user.chatId = :chatId", { chatId: chatId.toString() })
+            .getOne();
     }
 
-    async addUser(userId: number, chatId: number) {
-        const newUser = new UserSocialRating();
+    async getUsers() {
+        return await dataSource.createQueryBuilder()
+        .select("user")
+        .from(UserSocialRating, "user")
+        .getMany();
+    }
 
-        newUser.userId = userId;
-        newUser.chatId = chatId;
-        newUser.socialRating = 100;
-
-        await dataSource.manager.save(newUser);
+    async addUserSocialRating(userId: number, chatId: number) {
+        await dataSource
+            .createQueryBuilder()
+            .insert()
+            .into(UserSocialRating)
+            .values([
+                { userId: userId.toString(), chatId: chatId.toString(),  socialRating: 100}
+            ])
+            .execute();
     }
 
     async changeUserRating(userId: number, chatId: number, userRating: number) {
-        let userWithRating = await this.getUser(userId, chatId);
-        userWithRating.socialRating += userRating;
+        let userSocialRating = await this.getUser(userId, chatId);
 
-        await dataSource.manager.save(userWithRating)
+        await dataSource
+            .createQueryBuilder()
+            .update(UserSocialRating)
+            .set({ socialRating: userSocialRating.socialRating += userRating})
+            .where("userId = :userId", { userId: userId.toString() })
+            .andWhere("chatId = :chatId", { chatId: chatId.toString() })
+            .execute();
     }
-
-    async getUserRating(userId: number, chatId: number) {
-        const userWithRating = await this.getUser(userId, chatId);
-        return userWithRating.socialRating;
-    }
-
-    async removeUser(userId: number, chatId: number) {
-    }
-
-
 }

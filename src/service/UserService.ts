@@ -8,27 +8,39 @@ export class UserService {
     }
 
     async getUser(userId: number, chatId: number) {
-        return await dataSource.manager.findOneBy(User, {userId: userId, chatId: chatId});
+        return await dataSource.createQueryBuilder()
+            .select("user")
+            .from(User, "user")
+            .where("user.userId = :userId", { userId: userId })
+            // .andWhere("user.chatId = :chatId", { chatId: chatId.toString() })
+            .getOne();
     }
 
-    async addUser(from: any) {
+    async getUsers() {
+        return await dataSource.createQueryBuilder()
+            .select("user")
+            .from(User, "user")
+            .getMany();
+    }
 
-        const newUser = new User();
-
-        newUser.userId = from.id;
-        // @ts-ignore
-        newUser.chatId = ctx.message.chat.id;
-        newUser.username = from.username;
-        newUser.firstName = from.first_name;
-        newUser.lastName = from.last_name;
-
-        newUser.isAdmin = from.id === 152984728;
-        newUser.isBlocked = false;
-
-        await dataSource.manager.save(newUser);
-
-        return newUser;
-
+    async addUser(user: any, chatId: number) {
+        let newUser = await dataSource
+            .createQueryBuilder()
+            .insert()
+            .into(User)
+            .values([
+                {   userId: user.id.toString(), 
+                    chatId: chatId.toString(),
+                    username: user.username,
+                    firstName: user.first_name,
+                    lastName: user.last_name,
+                    isAdmin: user.id === 152984728,
+                    isBlocked: false
+                }
+            ])
+            .returning("*")
+            .execute();
+        return newUser.raw    
     }
 
 }

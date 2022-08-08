@@ -1,13 +1,13 @@
-import {Entity, Column, PrimaryColumn} from "typeorm";
+import {Entity, Column, PrimaryColumn, Unique, PrimaryGeneratedColumn} from "typeorm";
 
 @Entity()
 export class User {
 
     @PrimaryColumn()
-    userId: number
+    userId: number;
 
     @Column({nullable: true, type: "bigint"})
-    chatId: number
+    chatId: string;
 
     @Column({nullable: true})
     firstName: string;
@@ -19,25 +19,29 @@ export class User {
     username: string;
 
     @Column({nullable: true})
-    isAdmin: boolean
+    isAdmin: boolean;
 
     @Column({nullable: true})
-    lastUpdated: Date
+    lastUpdated: Date;
 
     @Column({nullable: false, default: false})
-    isBlocked: boolean
+    isBlocked: boolean;
 
 }
 
 @Entity()
+@Unique(["userId", "chatId"])
 export class UserSocialRating {
 
-    @PrimaryColumn()
-    userId: number
+    @PrimaryGeneratedColumn()
+    userRatingId: number;
 
     @Column({nullable: true, type: "bigint"})
-    chatId: number
+    userId: string;
 
-    @Column({nullable: false, type: "int"})
+    @Column({nullable: true, type: "bigint"})
+    chatId: string;
+
+    @Column({nullable: true})
     socialRating: number;
 }
