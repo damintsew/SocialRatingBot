@@ -1,8 +1,8 @@
 import {DataSource} from "typeorm";
 import { env } from 'node:process';
-import {User} from "../entity/User";
+import {User, UserSocialRating} from "../entity/User";
 
-export const ds = new DataSource({
+export const dataSource = new DataSource({
             type: "postgres",
             host: env.DB_HOST,
             port: 5432,
@@ -10,7 +10,7 @@ export const ds = new DataSource({
             password: "changeme",
             database: "postgres",
             entities: [
-                User //, SubsriptionData, Announcements
+                User, UserSocialRating
             ],
             synchronize: true,
             logging: true
