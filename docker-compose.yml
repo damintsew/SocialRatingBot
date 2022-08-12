@@ -22,10 +22,3 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
 
-  social_bot:
-    container_name: social-rating-bot
-    image: damintsew/social-rating-bot
-    restart: unless-stopped
-    environment:
-      DB_HOST: postgres
-      TG_TOKEN: "5514653710:AAEEphIotFusspDxnreH8W0XS2B1-FCN6EQ"
