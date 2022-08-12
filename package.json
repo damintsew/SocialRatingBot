@@ -15,7 +15,7 @@
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run lint",
-    "run": "tsc && node dist/index.js"
+    "start": "tsc && node dist/index.js"
   },
   "dependencies": {
     "pg": "^8.7.3",

@@ -8,7 +8,7 @@ export const dataSource = new DataSource({
             port: 5432,
             username: "postgres",
             password: "changeme",
-            database: "postgres",
+            database: "social_rating",
             entities: [
                 User, UserSocialRating
             ],

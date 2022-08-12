@@ -3,8 +3,8 @@ import {Entity, Column, PrimaryColumn, Unique, PrimaryGeneratedColumn} from "typ
 @Entity()
 export class User {
 
-    @PrimaryColumn()
-    userId: number;
+    @PrimaryColumn({type: "bigint"})
+    userId: string;
 
     @Column({nullable: true, type: "bigint"})
     chatId: string;

@@ -1,7 +1,7 @@
 import {dataSource} from "../db/data-source";
 import {User} from "../entity/User";
 
-export class UserService {
+export class UserDao {
 
     constructor(){
         dataSource.initialize();
@@ -16,10 +16,11 @@ export class UserService {
             .getOne();
     }
 
-    async getUsers() {
+    async getUsersInChat(chatId: number) {
         return await dataSource.createQueryBuilder()
             .select("user")
             .from(User, "user")
+            .where("user.chatId = :chatId", { chatId: chatId.toString() })
             .getMany();
     }
 
@@ -29,7 +30,7 @@ export class UserService {
             .insert()
             .into(User)
             .values([
-                {   userId: user.id.toString(), 
+                {   userId: user.id.toString(),
                     chatId: chatId.toString(),
                     username: user.username,
                     firstName: user.first_name,
@@ -40,7 +41,7 @@ export class UserService {
             ])
             .returning("*")
             .execute();
-        return newUser.raw    
+        return newUser.raw
     }
 
 }
