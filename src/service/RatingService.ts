@@ -59,6 +59,22 @@ export class RatingService {
         }
     }
 
+    async printRatingAll(ctx) {
+        let chatId = ctx.message.chat.id
+        const usersById = (await this.userDao.getUsersInChat(chatId))
+            .reduce((obj, item) => ({...obj, [item.userId]: item}), {})
+
+        const usersRating = await this.getRatingForAllUsers(chatId);
+
+        let message = "🇨🇳 Партия гордится вам!\n";
+        for (let rating of usersRating) {
+            const user = usersById[rating.userId]
+            let line = `⭐ ${user?.firstName ?? user?.username} твой рейтинг ${rating.socialRating}\n`
+            message += line
+        }
+        ctx.reply(message)
+    }
+
     async getRating(userId: number, chatId: number) {
         return this.dao.getRating(userId, chatId);
     }
@@ -74,7 +90,7 @@ export class RatingService {
     private processStickerPack(setName: string, file_unique_id: string): number {
         const stickerPackCatalog = RatingCatalog.catalog[setName]
         if (stickerPackCatalog == null) {
-            throw new Error(`Unknown sticker pack name = ${setName} `)
+            return 0
         }
 
         const stickerDesc = stickerPackCatalog[file_unique_id]

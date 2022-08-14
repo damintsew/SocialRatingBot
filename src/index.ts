@@ -4,11 +4,13 @@ import {MyContext} from "./domain/Domain";
 import {RatingService} from "./service/RatingService";
 import {UserDao} from "./dao/UserDao";
 import {RatingDao} from "./dao/RatingDao";
+import {TextProcessingService} from "./service/TextProcessingService";
 
 const ratingDao = new RatingDao()
 const userService = new UserDao()
 
 const ratingService = new RatingService(ratingDao, userService)
+const textProcessingService = new TextProcessingService(ratingService)
 
 const token = env.TG_TOKEN
 if (token === undefined) {
@@ -63,35 +65,12 @@ bot.command('rating', async (ctx) => {
 });
 
 bot.command('rating_all', async (ctx) => {
-    let chatId = ctx.message.chat.id
-    const usersById = (await userService.getUsersInChat(chatId))
-        .reduce((obj, item) => ({...obj, [item.userId]: item}), {})
-
-    const usersRating = await ratingService.getRatingForAllUsers(chatId);
-
-    let message = "";
-    for (let rating of usersRating) {
-        const user = usersById[rating.userId]
-        let line = `${user?.firstName ?? user?.username} твой рейтинг ${rating.socialRating}\n`
-        message += line
-    }
-    ctx.reply(message)
+    await ratingService.printRatingAll(ctx)
 });
 
 
 bot.on('text', async (ctx) => {
-    console.log(ctx)
-    if (ctx.message.text.toLowerCase() == "баян") {
-        if (ctx.message.reply_to_message != null) {
-            let userId = ctx.message.reply_to_message.from.id
-            let chatId = ctx.message.reply_to_message.chat.id
-            ctx.reply(await ratingService.changeRating(userId, chatId, -20))
-        } else {
-            ctx.reply("Для изменения рейтинга укажите какое сообщение 'баян'")
-        }
-    }
-    // const allUsers = await ratingService.getUsers();
-    // console.log(allUsers)
+    await textProcessingService.processText(ctx)
 })
 
 bot.on('sticker', async (ctx) => {
