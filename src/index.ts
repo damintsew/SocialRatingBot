@@ -9,15 +9,17 @@ import {TextProcessingService} from "./service/TextProcessingService";
 const ratingDao = new RatingDao()
 const userService = new UserDao()
 
-const ratingService = new RatingService(ratingDao, userService)
-const textProcessingService = new TextProcessingService(ratingService)
 
 const token = env.TG_TOKEN
 if (token === undefined) {
     throw new Error('BOT_TOKEN must be provided!')
 }
-
 const bot = new Telegraf<MyContext>(token)
+
+const ratingService = new RatingService(bot, ratingDao, userService)
+const textProcessingService = new TextProcessingService(ratingService)
+
+
 const stage = new Scenes.Stage<MyContext>()
 
 bot.telegram.deleteMyCommands()

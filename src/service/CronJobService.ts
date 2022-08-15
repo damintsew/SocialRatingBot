@@ -24,7 +24,7 @@ export class CronJobService {
 
     async action(): Promise<void> {
         console.log("22 Job start")
-        // await this.ratingService.printRatingAll();
+        await this.ratingService.printRatingAll_Z();
 
         console.log("22 Job end")
 

@@ -3,12 +3,16 @@ import {UserSocialRating} from "../entity/User";
 import {RatingDao} from "../dao/RatingDao";
 import {UserDao} from "../dao/UserDao";
 import {RatingCatalog} from "./RatingCatalog";
+import Telegram from "telegraf/src/telegram";
+import {Telegraf} from "telegraf";
 
 export class RatingService {
+    private bot: Telegraf;
     private dao: RatingDao;
     private userDao: UserDao;
 
-    constructor(dao: RatingDao, userDao: UserDao) {
+    constructor(bot: Telegraf, dao: RatingDao, userDao: UserDao) {
+        this.bot = bot;
         this.dao = dao;
         this.userDao = userDao;
         dataSource.initialize();
@@ -60,19 +64,14 @@ export class RatingService {
     }
 
     async printRatingAll(ctx) {
-        let chatId = ctx.message.chat.id
-        const usersById = (await this.userDao.getUsersInChat(chatId))
-            .reduce((obj, item) => ({...obj, [item.userId]: item}), {})
+        let replyMessage = await this.prepareRatingMessage(ctx.message.chat.id)
+        ctx.reply(replyMessage)
+    }
 
-        const usersRating = await this.getRatingForAllUsers(chatId);
-
-        let message = "🇨🇳 Партия гордится вам!\n";
-        for (let rating of usersRating) {
-            const user = usersById[rating.userId]
-            let line = `⭐ ${user?.firstName ?? user?.username} твой рейтинг ${rating.socialRating}\n`
-            message += line
-        }
-        ctx.reply(message)
+    async printRatingAll_Z() {
+        let chatId = -1001085907838 // todo remove hardcode
+        let replyMessage = await this.prepareRatingMessage(chatId)
+        await this.bot.telegram.sendMessage(chatId, replyMessage)
     }
 
     async getRating(userId: number, chatId: number) {
@@ -99,5 +98,21 @@ export class RatingService {
         } else {
             throw new Error(`Unknown sticker file_id = ${file_unique_id} `)
         }
+    }
+
+    private async prepareRatingMessage(chatId: number): Promise<string> {
+
+        const usersById = (await this.userDao.getUsersInChat(chatId))
+            .reduce((obj, item) => ({...obj, [item.userId]: item}), {})
+
+        const usersRating = await this.getRatingForAllUsers(chatId);
+
+        let message = "🇨🇳 Партия гордится вам!\n";
+        for (let rating of usersRating) {
+            const user = usersById[rating.userId]
+            let line = `⭐ ${user?.firstName ?? user?.username} твой рейтинг ${rating.socialRating}\n`
+            message += line
+        }
+        return message
     }
 }
