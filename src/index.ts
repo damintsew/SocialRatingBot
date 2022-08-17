@@ -5,6 +5,7 @@ import {RatingService} from "./service/RatingService";
 import {UserDao} from "./dao/UserDao";
 import {RatingDao} from "./dao/RatingDao";
 import {TextProcessingService} from "./service/TextProcessingService";
+import {CronJobService} from "./service/CronJobService";
 
 const ratingDao = new RatingDao()
 const userService = new UserDao()
@@ -18,7 +19,7 @@ const bot = new Telegraf<MyContext>(token)
 
 const ratingService = new RatingService(bot, ratingDao, userService)
 const textProcessingService = new TextProcessingService(ratingService)
-
+const cronJobService = new CronJobService(ratingService)
 
 const stage = new Scenes.Stage<MyContext>()
 
@@ -83,11 +84,14 @@ bot.on('sticker', async (ctx) => {
 });
 
 bot.launch()
+cronJobService.start()
 
 
 process.once('SIGINT', () => {
     bot.stop('SIGINT')
+    cronJobService.stop();
 })
 process.once('SIGTERM', () => {
     bot.stop('SIGTERM')
+    cronJobService.stop();
 })

@@ -3,7 +3,6 @@ import {UserSocialRating} from "../entity/User";
 import {RatingDao} from "../dao/RatingDao";
 import {UserDao} from "../dao/UserDao";
 import {RatingCatalog} from "./RatingCatalog";
-import Telegram from "telegraf/src/telegram";
 import {Telegraf} from "telegraf";
 
 export class RatingService {
@@ -36,6 +35,11 @@ export class RatingService {
         let userIdToProcess = ctx.message.reply_to_message.from.id
         let chatIdToProcess = ctx.message.reply_to_message.chat.id
 
+        if (ctx.message.from.id === ctx.message.reply_to_message.from.id) {
+            ctx.reply("Хотеть набить рейтинг себя? 肮脏的臭猪 !")
+            return;
+        }
+
         let ratingChange = 0
         if (ctx.message.sticker.set_name != null) {
             try {
@@ -46,11 +50,11 @@ export class RatingService {
         } else
             switch (ctx.message.sticker.emoji) {
                 case '👎': {
-                    ratingChange = -20
+                    ratingChange = -10
                     break
                 }
                 case '👍': {
-                    ratingChange = +20
+                    ratingChange = +10
                     break
                 }
                 default: {
@@ -96,7 +100,7 @@ export class RatingService {
         if (stickerDesc != null) {
             return stickerDesc.ratingValue;
         } else {
-            throw new Error(`Unknown sticker file_id = ${file_unique_id} `)
+            throw new Error(`Нужно добавить стикер file_id = ${file_unique_id} `)
         }
     }
 

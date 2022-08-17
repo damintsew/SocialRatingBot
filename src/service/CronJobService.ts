@@ -8,18 +8,13 @@ export class CronJobService {
 
     constructor(ratingService: RatingService) {
         this.ratingService = ratingService;
-        this.cronJob = new CronJob('1 0 22 * * *', async () => {
+        this.cronJob = new CronJob('0 0 10 * * *', async () => {
             try {
                 await this.action();
             } catch (e) {
                 console.error(e);
             }
         });
-
-        // Start job
-        if (!this.cronJob.running) {
-            this.cronJob.start();
-        }
     }
 
     async action(): Promise<void> {
@@ -29,6 +24,12 @@ export class CronJobService {
         console.log("22 Job end")
 
 
+    }
+
+    start() {
+        if (!this.cronJob.running) {
+            this.cronJob.start();
+        }
     }
 
     stop() {

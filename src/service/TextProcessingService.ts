@@ -1,8 +1,13 @@
 import {RatingService} from "./RatingService";
+import {AllahProcessor} from "./text-processors/AllahProcessor";
+import {TextProcessor} from "../api/TextProcessor";
+import {PutinProcessor} from "./text-processors/PutinProcessor";
 
 export class TextProcessingService {
 
     private ratingService: RatingService;
+    private textProcessors: TextProcessor[] = [
+        new AllahProcessor(), new PutinProcessor()]
 
     constructor(ratingService: RatingService) {
         this.ratingService = ratingService;
@@ -18,9 +23,34 @@ export class TextProcessingService {
             } else {
                 ctx.reply("Для изменения рейтинга укажите какое сообщение 'баян'")
             }
-        } else if (ctx.message.text.toLowerCase().includes("аллах")) {
-            let replyText = "你是一头脏猪 уйгур!! Хотеть попадать концлагерь?"
-            ctx.reply(replyText)
         }
+
+        const text = ctx.message.text.toLowerCase()
+
+        for (let processor of this.textProcessors) {
+            const phrases = processor.fitsProcessing()
+
+            let match = this.matchesTest(phrases, text);
+
+            if (match) {
+                processor.processRequest(ctx)
+
+                if (!processor.shouldContinue()) {
+                    break;
+                }
+            }
+        }
+    }
+
+    private matchesTest(phrases: string[], text: string) {
+        let match = false;
+
+        for (let keyPhrase of phrases) {
+            if (text.includes(keyPhrase)) {
+                match = true;
+                break
+            }
+        }
+        return match;
     }
 }
