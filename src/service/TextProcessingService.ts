@@ -2,15 +2,19 @@ import {RatingService} from "./RatingService";
 import {AllahProcessor} from "./text-processors/AllahProcessor";
 import {TextProcessor} from "../api/TextProcessor";
 import {PutinProcessor} from "./text-processors/PutinProcessor";
+import {RetryStorage} from "./retry/RetryStorage";
+import {GreatChinaProcessor} from "./text-processors/GreatChinaProcessor";
 
 export class TextProcessingService {
 
+    private readonly retryStorage = new RetryStorage();
     private ratingService: RatingService;
     private textProcessors: TextProcessor[] = [
         new AllahProcessor(), new PutinProcessor()]
 
     constructor(ratingService: RatingService) {
         this.ratingService = ratingService;
+        this.textProcessors.push(new GreatChinaProcessor(this.retryStorage, ratingService));
     }
 
     async processText(ctx) {

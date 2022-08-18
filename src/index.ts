@@ -27,8 +27,6 @@ bot.telegram.deleteMyCommands()
     .then(() => bot.telegram.setMyCommands([
         {command: 'rating', description: 'Показать личный рейтинг'},
         {command: 'rating_all', description: 'Показать лучший друг Си'}
-        // {command: 'unsubscribe', description: 'Отписаться от уведомлений'},
-        // {command: 'help', description: 'Список моих возможностей'}
     ]));
 
 bot.use(session())
@@ -70,7 +68,6 @@ bot.command('rating', async (ctx) => {
 bot.command('rating_all', async (ctx) => {
     await ratingService.printRatingAll(ctx)
 });
-
 
 bot.on('text', async (ctx) => {
     await textProcessingService.processText(ctx)
