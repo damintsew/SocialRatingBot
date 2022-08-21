@@ -15,10 +15,6 @@ export class GreatChinaProcessor extends RetriableProcessor implements TextProce
         ];
     }
 
-    shouldContinue(): boolean {
-        return false;
-    }
-
     getActionType(): string {
         return "GREAT_CHINA";
     }

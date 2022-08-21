@@ -16,8 +16,19 @@ export abstract class RetriableProcessor implements TextProcessor {
     }
 
     async processRequest(ctx) {
-        let userId = ctx.message.from.id
-        let chatId = ctx.message.chat.id
+        let userId;
+        let chatId;
+
+        if (this.useReplyToMessage()) {
+            if (ctx.message.reply_to_message == null) {
+                ctx.reply("Указать какой сообщений! Кому давать иди забирать рис!")
+            }
+            userId = ctx.message.reply_to_message.from.id
+            chatId = ctx.message.reply_to_message.chat.id
+        } else {
+            userId = ctx.message.from.id
+            chatId = ctx.message.chat.id
+        }
 
         let activeAlerts = this.retryStorage.get(userId, chatId);
         let alert = activeAlerts.get(this.getActionType());
@@ -46,7 +57,13 @@ export abstract class RetriableProcessor implements TextProcessor {
 
     abstract fitsProcessing(): string[];
 
-    abstract shouldContinue(): boolean;
+    shouldContinue(): boolean {
+        return false;
+    }
+
+    useReplyToMessage(): boolean {
+        return false;
+    }
 
     private findAnswer(alert): Action {
         let availableActions = this.getActions()
