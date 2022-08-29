@@ -5,7 +5,7 @@ import {Action} from "../../api/Action";
 
 export class BayanProcessor extends RetriableProcessor implements TextProcessor {
 
-    fitsProcessing(): string[] {
+    keyPhrases(): string[] {
         return [
             "баян",
         ];

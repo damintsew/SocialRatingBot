@@ -5,7 +5,7 @@ import {Action} from "../../api/Action";
 
 export class GreatChinaProcessor extends RetriableProcessor implements TextProcessor {
 
-    fitsProcessing(): string[] {
+    keyPhrases(): string[] {
         return [
             "великий китай",
             "великий си",
@@ -13,7 +13,7 @@ export class GreatChinaProcessor extends RetriableProcessor implements TextProce
             "китай велик",
             "слава партии",
         ];
-    }
+    }в
 
     getActionType(): string {
         return "GREAT_CHINA";

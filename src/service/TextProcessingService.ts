@@ -10,37 +10,29 @@ export class TextProcessingService {
 
     private readonly retryStorage = new RetryStorage();
     private ratingService: RatingService;
-    private textProcessors: TextProcessor[] = [new PutinProcessor()]
+    private textProcessors: TextProcessor[] = []
 
     constructor(ratingService: RatingService) {
         this.ratingService = ratingService;
+
+        this.textProcessors.push(new PutinProcessor());
         this.textProcessors.push(new GreatChinaProcessor(this.retryStorage, ratingService));
         this.textProcessors.push(new AllahProcessor(this.retryStorage, ratingService));
         this.textProcessors.push(new BayanProcessor(this.retryStorage, ratingService));
     }
 
     async processText(ctx) {
-        console.log(ctx)
-        // if (ctx.message.text.toLowerCase() == "баян") {
-        //     if (ctx.message.reply_to_message != null) {
-        //         let userId = ctx.message.reply_to_message.from.id
-        //         let chatId = ctx.message.reply_to_message.chat.id
-        //         ctx.reply(await this.ratingService.changeRating(userId, chatId, -20))
-        //     } else {
-        //         ctx.reply("Для изменения рейтинга укажите какое сообщение 'баян'")
-        //     }
-        // }
+        console.log(`from = ${ctx.message.from.id} chatId = ${ctx.message.from.id} message = ${ctx.message.text} `)
 
         const text = ctx.message.text.toLowerCase()
 
         for (let processor of this.textProcessors) {
-            const phrases = processor.fitsProcessing()
+            const phrases = processor.keyPhrases()
 
-            let match = this.matchesTest(phrases, text);
+            let match = this.matchesText(phrases, text);
 
             if (match) {
                 processor.processRequest(ctx)
-
                 if (!processor.shouldContinue()) {
                     break;
                 }
@@ -48,8 +40,9 @@ export class TextProcessingService {
         }
     }
 
-    private matchesTest(phrases: string[], text: string) {
+    private matchesText(phrases: string[], text: string) {
         let match = false;
+
 
         for (let keyPhrase of phrases) {
             if (text.includes(keyPhrase)) {
@@ -59,4 +52,21 @@ export class TextProcessingService {
         }
         return match;
     }
+
+    /*private matchesText(phrases: string[], text: string) {
+        let match = true;
+        let incomingWords = text.split(" ");
+
+        for (let keyPhrase of phrases) {
+            let localMatch = false;
+            for (let inputWord of incomingWords) {
+                if (inputWord == keyPhrase) {
+                    localMatch = true;
+                    break
+                }
+            }
+            match = match && localMatch;
+        }
+        return match;
+    }*/
 }

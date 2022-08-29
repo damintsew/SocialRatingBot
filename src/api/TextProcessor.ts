@@ -2,7 +2,7 @@
 
 export abstract class TextProcessor {
 
-    public abstract fitsProcessing(): string[]
+    public abstract keyPhrases(): string[]
 
     abstract shouldContinue(): boolean
 

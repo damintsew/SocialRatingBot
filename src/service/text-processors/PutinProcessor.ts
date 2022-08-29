@@ -3,7 +3,7 @@ import {TextProcessor} from "../../api/TextProcessor";
 
 export class PutinProcessor implements TextProcessor {
 
-    fitsProcessing(): string[] {
+    keyPhrases(): string[] {
         return [
             "слава путину",
             "великий путин",

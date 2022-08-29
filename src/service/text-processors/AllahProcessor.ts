@@ -5,7 +5,7 @@ import {Action} from "../../api/Action";
 
 export class AllahProcessor extends RetriableProcessor implements TextProcessor {
 
-    fitsProcessing(): string[] {
+    keyPhrases(): string[] {
         return [
             "аллах",
             "аллах велик",

@@ -21,7 +21,7 @@ export abstract class RetriableProcessor implements TextProcessor {
 
         if (this.useReplyToMessage()) {
             if (ctx.message.reply_to_message == null) {
-                ctx.reply("Указать какой сообщений! Кому давать иди забирать рис!")
+                return ctx.reply("Указать какой сообщений! Кому давать или забирать рис!");
             }
             userId = ctx.message.reply_to_message.from.id
             chatId = ctx.message.reply_to_message.chat.id
@@ -55,7 +55,7 @@ export abstract class RetriableProcessor implements TextProcessor {
 
     abstract getActions(): Action[]
 
-    abstract fitsProcessing(): string[];
+    abstract keyPhrases(): string[];
 
     shouldContinue(): boolean {
         return false;
