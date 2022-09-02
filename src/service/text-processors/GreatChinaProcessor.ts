@@ -1,19 +1,20 @@
 import {TextProcessor} from "../../api/TextProcessor";
-import {RetriableProcessor} from "../retry/RetriableProcessor";
+import {StatePersistandProcessor} from "../retry/StatePersistandProcessor";
 import {Action} from "../../api/Action";
 
 
-export class GreatChinaProcessor extends RetriableProcessor implements TextProcessor {
+export class GreatChinaProcessor extends StatePersistandProcessor implements TextProcessor {
 
     keyPhrases(): string[] {
         return [
             "великий китай",
             "великий си",
+            "слава си",
             "китай великий",
             "китай велик",
             "слава партии",
         ];
-    }в
+    }
 
     getActionType(): string {
         return "GREAT_CHINA";

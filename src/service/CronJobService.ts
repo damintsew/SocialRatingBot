@@ -1,13 +1,14 @@
 import {CronJob} from 'cron';
 import {RatingService} from "./RatingService";
+import {RatingTgAdapter} from "./RatingTgAdapter";
 
 export class CronJobService {
 
     cronJob: CronJob;
-    ratingService: RatingService;
+    ratingTgAdapter: RatingTgAdapter;
 
-    constructor(ratingService: RatingService) {
-        this.ratingService = ratingService;
+    constructor(ratingTgAdapter: RatingTgAdapter) {
+        this.ratingTgAdapter = ratingTgAdapter;
         this.cronJob = new CronJob('0 0 10 * * *', async () => {
             try {
                 await this.action();
@@ -19,7 +20,7 @@ export class CronJobService {
 
     async action(): Promise<void> {
         console.log("22 Job start")
-        await this.ratingService.printRatingAll_Z();
+        await this.ratingTgAdapter.prepareRatingMessageForChat();
 
         console.log("22 Job end")
 

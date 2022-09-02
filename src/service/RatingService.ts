@@ -4,14 +4,13 @@ import {RatingDao} from "../dao/RatingDao";
 import {UserDao} from "../dao/UserDao";
 import {RatingCatalog} from "./RatingCatalog";
 import {Telegraf} from "telegraf";
+import {AnswerType, ImageTextReply, Reply, TextReply} from "../api/Reply";
 
 export class RatingService {
-    private bot: Telegraf;
     private dao: RatingDao;
     private userDao: UserDao;
 
-    constructor(bot: Telegraf, dao: RatingDao, userDao: UserDao) {
-        this.bot = bot;
+    constructor(dao: RatingDao, userDao: UserDao) {
         this.dao = dao;
         this.userDao = userDao;
         dataSource.initialize();
@@ -67,18 +66,7 @@ export class RatingService {
         }
     }
 
-    async printRatingAll(ctx) {
-        let replyMessage = await this.prepareRatingMessage(ctx.message.chat.id)
-        ctx.reply(replyMessage)
-    }
-
-    async printRatingAll_Z() {
-        let chatId = -1001085907838 // todo remove hardcode
-        let replyMessage = await this.prepareRatingMessage(chatId)
-        await this.bot.telegram.sendMessage(chatId, replyMessage)
-    }
-
-    async getRating(userId: number, chatId: number) {
+    async getRating(userId: number, chatId: number): Promise<UserSocialRating> {
         return this.dao.getRating(userId, chatId);
     }
 
@@ -104,19 +92,42 @@ export class RatingService {
         }
     }
 
-    private async prepareRatingMessage(chatId: number): Promise<string> {
+    async prepareRatingMessage(chatId: number): Promise<Array<Reply>> {
 
         const usersById = (await this.userDao.getUsersInChat(chatId))
             .reduce((obj, item) => ({...obj, [item.userId]: item}), {})
 
         const usersRating = await this.getRatingForAllUsers(chatId);
 
-        let message = "🇨🇳 Партия гордится вам!\n";
-        for (let rating of usersRating) {
-            const user = usersById[rating.userId]
-            let line = `⭐ ${user?.firstName ?? user?.username} твой рейтинг ${rating.socialRating}\n`
-            message += line
+        const responses = new Array<Reply>();
+        if (usersRating.length >= 3) {
+            const firstUserRating = usersRating.shift();
+            const firstUser = usersById[firstUserRating.userId]
+
+            responses.push(new ImageTextReply(
+                `🇨🇳 Партия герой ${firstUser?.firstName ?? firstUser?.username} (@${firstUser?.username}) твой рейтинг ${firstUserRating.socialRating}!\nСамый сильный и умный! Пусть нефритовый жезл твердый крепкий как Партия!!`,
+                "image_sexy_man.jpeg",
+                true
+            ))
+            if (usersRating.length > 0) {
+                let message = 'Остальные член партия\n';
+                for (let rating of usersRating) {
+                    const user = usersById[rating.userId]
+                    let line = `⭐ ${user?.firstName ?? user?.username} твой рейтинг ${rating.socialRating}\n`
+                    message += line
+                }
+                responses.push(new TextReply(message))
+            }
+        } else {
+            let message = "🇨🇳 Партия гордится вам!\n";
+            for (let rating of usersRating) {
+                const user = usersById[rating.userId]
+                let line = `⭐ ${user?.firstName ?? user?.username} твой рейтинг ${rating.socialRating}\n`
+                message += line
+            }
+            responses.push(new TextReply(message))
         }
-        return message
+        return responses
     }
+
 }

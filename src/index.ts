@@ -6,6 +6,7 @@ import {UserDao} from "./dao/UserDao";
 import {RatingDao} from "./dao/RatingDao";
 import {TextProcessingService} from "./service/TextProcessingService";
 import {CronJobService} from "./service/CronJobService";
+import {RatingTgAdapter} from "./service/RatingTgAdapter";
 
 const ratingDao = new RatingDao()
 const userService = new UserDao()
@@ -17,9 +18,11 @@ if (token === undefined) {
 }
 const bot = new Telegraf<MyContext>(token)
 
-const ratingService = new RatingService(bot, ratingDao, userService)
+const ratingService = new RatingService(ratingDao, userService)
 const textProcessingService = new TextProcessingService(ratingService)
-const cronJobService = new CronJobService(ratingService)
+const ratingAdapter = new RatingTgAdapter(ratingService, bot);
+
+const cronJobService = new CronJobService(ratingAdapter)
 
 const stage = new Scenes.Stage<MyContext>()
 
@@ -45,8 +48,12 @@ bot.use(async (ctx, next) => {
             ctx.session.user = userFromDB;
         }
         ctx.session.isUserSaved = true;
-        // const allUsers = await userService.getUsers();
-        // console.log(allUsers)
+    }
+
+    const userId = Number.parseInt(ctx.session.user.userId, 10)
+    const userRating = await ratingService.getRating(userId, ctx.chat.id);
+    if (userRating == null) {
+        await ratingService.addUserSocialRating(userId, ctx.chat.id);
     }
 
     return next()
@@ -66,7 +73,7 @@ bot.command('rating', async (ctx) => {
 });
 
 bot.command('rating_all', async (ctx) => {
-    await ratingService.printRatingAll(ctx)
+    await ratingAdapter.prepareRatingMessage(ctx)
 });
 
 bot.on('text', async (ctx) => {

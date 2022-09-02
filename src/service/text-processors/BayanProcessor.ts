@@ -1,9 +1,9 @@
 import {TextProcessor} from "../../api/TextProcessor";
-import {RetriableProcessor} from "../retry/RetriableProcessor";
+import {StatePersistandProcessor} from "../retry/StatePersistandProcessor";
 import {Action} from "../../api/Action";
 
 
-export class BayanProcessor extends RetriableProcessor implements TextProcessor {
+export class BayanProcessor extends StatePersistandProcessor implements TextProcessor {
 
     keyPhrases(): string[] {
         return [

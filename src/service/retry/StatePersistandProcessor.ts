@@ -3,9 +3,7 @@ import {Action} from "../../api/Action";
 import {TextProcessor} from "../../api/TextProcessor";
 import {RatingService} from "../RatingService";
 
-
-// todo rename !
-export abstract class RetriableProcessor implements TextProcessor {
+export abstract class StatePersistandProcessor implements TextProcessor {
 
     private retryStorage: RetryStorage
     private ratingService: RatingService
@@ -21,7 +19,11 @@ export abstract class RetriableProcessor implements TextProcessor {
 
         if (this.useReplyToMessage()) {
             if (ctx.message.reply_to_message == null) {
-                return ctx.reply("Указать какой сообщений! Кому давать или забирать рис!");
+                if (this.shouldNotifyWhenReplyMessageNull()) {
+                    return ctx.reply("Указать какой сообщений! Кому давать или забирать рис!");
+                } else {
+                    return
+                }
             }
             userId = ctx.message.reply_to_message.from.id
             chatId = ctx.message.reply_to_message.chat.id
@@ -75,5 +77,9 @@ export abstract class RetriableProcessor implements TextProcessor {
             return availableActions[availableActions.length - 1]
         }
         return availableActions[alert.occasions - 1]
+    }
+
+    protected shouldNotifyWhenReplyMessageNull(): boolean {
+        return true;
     }
 }
