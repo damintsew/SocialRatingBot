@@ -1,10 +1,8 @@
-import {dataSource} from "../db/data-source";
 import {UserSocialRating} from "../entity/User";
 import {RatingDao} from "../dao/RatingDao";
 import {UserDao} from "../dao/UserDao";
 import {RatingCatalog} from "./RatingCatalog";
-import {Telegraf} from "telegraf";
-import {AnswerType, ImageTextReply, Reply, TextReply} from "../api/Reply";
+import {ImageTextReply, Reply, TextReply} from "../api/Reply";
 
 export class RatingService {
     private dao: RatingDao;
@@ -13,7 +11,6 @@ export class RatingService {
     constructor(dao: RatingDao, userDao: UserDao) {
         this.dao = dao;
         this.userDao = userDao;
-        dataSource.initialize();
     }
 
     async changeRating(userId: number, chatId: number, ratingValue: number) {

@@ -1,9 +1,9 @@
 import {TextProcessor} from "../../api/TextProcessor";
-import {StatePersistandProcessor} from "../retry/StatePersistandProcessor";
+import {StatePersistentProcessor} from "../retry/StatePersistentProcessor";
 import {Action} from "../../api/Action";
 
 
-export class AllahProcessor extends StatePersistandProcessor implements TextProcessor {
+export class AllahProcessor extends StatePersistentProcessor implements TextProcessor {
 
     keyPhrases(): string[] {
         return [

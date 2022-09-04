@@ -5,7 +5,7 @@ import {PutinProcessor} from "./text-processors/PutinProcessor";
 import {RetryStorage} from "./retry/RetryStorage";
 import {GreatChinaProcessor} from "./text-processors/GreatChinaProcessor";
 import {BayanProcessor} from "./text-processors/BayanProcessor";
-import CommonPhrasesProcessor from "./text-processors/CommonPhrasesProcessor";
+import {CommonPhrasesProcessor, OffensivePhrasesProcessor} from "./text-processors/CommonPhrasesProcessor";
 
 export class TextProcessingService {
 
@@ -21,6 +21,7 @@ export class TextProcessingService {
         this.textProcessors.push(new AllahProcessor(this.retryStorage, ratingService));
         this.textProcessors.push(new BayanProcessor(this.retryStorage, ratingService));
         this.textProcessors.push(new CommonPhrasesProcessor(this.retryStorage, ratingService));
+        this.textProcessors.push(new OffensivePhrasesProcessor(this.retryStorage, ratingService));
     }
 
     async processText(ctx) {

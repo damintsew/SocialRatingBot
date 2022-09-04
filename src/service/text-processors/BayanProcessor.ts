@@ -1,9 +1,9 @@
 import {TextProcessor} from "../../api/TextProcessor";
-import {StatePersistandProcessor} from "../retry/StatePersistandProcessor";
+import {StatePersistentProcessor} from "../retry/StatePersistentProcessor";
 import {Action} from "../../api/Action";
 
 
-export class BayanProcessor extends StatePersistandProcessor implements TextProcessor {
+export class BayanProcessor extends StatePersistentProcessor implements TextProcessor {
 
     keyPhrases(): string[] {
         return [
@@ -17,11 +17,13 @@ export class BayanProcessor extends StatePersistandProcessor implements TextProc
 
     getActions(): Action[] {
         return [
-            new Action("Постить баян - рсатраивать Партия"),
+            new Action([
+                "Постить баян - рсатраивать Партия",
+                "Твоя деятельность расстраивает Партия!"
+            ]),
             new Action("Минус рис", -5),
         ];
     }
-
 
     useReplyToMessage(): boolean {
         return true;

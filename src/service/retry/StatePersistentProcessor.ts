@@ -3,7 +3,7 @@ import {Action} from "../../api/Action";
 import {TextProcessor} from "../../api/TextProcessor";
 import {RatingService} from "../RatingService";
 
-export abstract class StatePersistandProcessor implements TextProcessor {
+export abstract class StatePersistentProcessor implements TextProcessor {
 
     private retryStorage: RetryStorage
     private ratingService: RatingService
@@ -14,26 +14,10 @@ export abstract class StatePersistandProcessor implements TextProcessor {
     }
 
     async processRequest(ctx) {
-        let userId;
-        let chatId;
+        let [userId, chatId] = this.extractUserId(ctx)
 
-        if (this.useReplyToMessage()) {
-            if (ctx.message.reply_to_message == null) {
-                if (this.shouldNotifyWhenReplyMessageNull()) {
-                    return ctx.reply("Указать какой сообщений! Кому давать или забирать рис!");
-                } else {
-                    return
-                }
-            }
-            userId = ctx.message.reply_to_message.from.id
-            chatId = ctx.message.reply_to_message.chat.id
-        } else {
-            userId = ctx.message.from.id
-            chatId = ctx.message.chat.id
-        }
-
-        let activeAlerts = this.retryStorage.get(userId, chatId);
-        let alert = activeAlerts.get(this.getActionType());
+        let alert = this.retryStorage.get(userId, chatId)
+            .get(this.getActionType());
 
         if (alert == null) {
             alert = new Alert(userId, chatId, this.getActionType())
@@ -81,5 +65,31 @@ export abstract class StatePersistandProcessor implements TextProcessor {
 
     protected shouldNotifyWhenReplyMessageNull(): boolean {
         return true;
+    }
+
+    private extractUserId(ctx) {
+        let userId: string;
+        let chatId: string;
+
+        if (this.useReplyToMessage()) {
+            if (ctx.message.reply_to_message == null) {
+                if (this.shouldNotifyWhenReplyMessageNull()) {
+                    return ctx.reply("Указать какой сообщений! Кому давать или забирать рис!");
+                } else {
+                    return
+                }
+            }
+            userId = ctx.message.reply_to_message.from.id
+            chatId = ctx.message.reply_to_message.chat.id
+
+            if (userId === ctx.message.from.id && chatId === ctx.message.chat.id) {
+                return ctx.reply("Хотеть набить себя рейтинг?")
+            }
+        } else {
+            userId = ctx.message.from.id
+            chatId = ctx.message.chat.id
+        }
+
+        return [userId, chatId]
     }
 }

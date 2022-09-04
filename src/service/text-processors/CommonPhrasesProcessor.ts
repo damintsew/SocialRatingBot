@@ -1,8 +1,8 @@
-import {StatePersistandProcessor} from "../retry/StatePersistandProcessor";
+import {StatePersistentProcessor} from "../retry/StatePersistentProcessor";
 import {Action} from "../../api/Action";
 
 
-export default class CommonPhrasesProcessor extends StatePersistandProcessor {
+export class CommonPhrasesProcessor extends StatePersistentProcessor {
 
     getActionType(): string {
         return "COMMON_PHRASES";
@@ -15,17 +15,47 @@ export default class CommonPhrasesProcessor extends StatePersistandProcessor {
     keyPhrases(): string[] {
         return [
             "спасибо",
+            "спасиб",
             "ахахаха",
             "ахаха",
             "ахах",
         ];
     }
 
-
     protected shouldNotifyWhenReplyMessageNull(): boolean {
         return false;
     }
 
+    useReplyToMessage(): boolean {
+        return true;
+    }
+}
+
+export class OffensivePhrasesProcessor extends StatePersistentProcessor {
+
+    getActionType(): string {
+        return "OFFENSIVE_PHRASES";
+    }
+
+    getActions(): Action[] {
+        return [new Action([
+            "Ничтожество! Минус рис!",
+            "Твоя прекращать!"], -10)];
+    }
+
+    keyPhrases(): string[] {
+        return [
+            "винни пух",
+            "вини пух",
+            "чертов китай",
+            "грязные китайцы",
+            "чертова партия",
+        ];
+    }
+
+    protected shouldNotifyWhenReplyMessageNull(): boolean {
+        return false;
+    }
 
     useReplyToMessage(): boolean {
         return true;

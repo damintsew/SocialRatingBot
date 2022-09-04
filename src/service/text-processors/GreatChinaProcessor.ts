@@ -1,9 +1,9 @@
 import {TextProcessor} from "../../api/TextProcessor";
-import {StatePersistandProcessor} from "../retry/StatePersistandProcessor";
+import {StatePersistentProcessor} from "../retry/StatePersistentProcessor";
 import {Action} from "../../api/Action";
 
 
-export class GreatChinaProcessor extends StatePersistandProcessor implements TextProcessor {
+export class GreatChinaProcessor extends StatePersistentProcessor implements TextProcessor {
 
     keyPhrases(): string[] {
         return [
