@@ -1,6 +1,6 @@
 import {CronJob} from 'cron';
 import {RatingService} from "./RatingService";
-import {RatingTgAdapter} from "./RatingTgAdapter";
+import {RatingTgAdapter} from "../adapter/RatingTgAdapter";
 
 export class CronJobService {
 

@@ -2,6 +2,8 @@ import {Alert, RetryStorage} from "./RetryStorage";
 import {Action} from "../../api/Action";
 import {TextProcessor} from "../../api/TextProcessor";
 import {RatingService} from "../RatingService";
+import moment, {Duration} from "moment/moment";
+
 
 export abstract class StatePersistentProcessor implements TextProcessor {
 
@@ -20,7 +22,7 @@ export abstract class StatePersistentProcessor implements TextProcessor {
             .get(this.getActionType());
 
         if (alert == null) {
-            alert = new Alert(userId, chatId, this.getActionType())
+            alert = new Alert(userId, chatId, this.getActionType(), this.getAlertDuration())
         }
 
         let answer = this.findAnswer(alert)
@@ -28,13 +30,6 @@ export abstract class StatePersistentProcessor implements TextProcessor {
 
         alert.occasions += 1
         this.retryStorage.save(alert)
-    }
-
-    private async processAnswer(ctx, userId: number, chatId: number, answer: Action) {
-        if (answer.text) {
-            await this.ratingService.changeRating(userId, chatId, answer.ratingChange)
-            ctx.reply(answer.text)
-        }
     }
 
     abstract getActionType(): string
@@ -47,8 +42,12 @@ export abstract class StatePersistentProcessor implements TextProcessor {
         return false;
     }
 
-    useReplyToMessage(): boolean {
+    protected useReplyToMessage(): boolean {
         return false;
+    }
+
+    protected getAlertDuration(): Duration {
+        return moment.duration(1, 'day');
     }
 
     private findAnswer(alert): Action {
@@ -65,6 +64,13 @@ export abstract class StatePersistentProcessor implements TextProcessor {
 
     protected shouldNotifyWhenReplyMessageNull(): boolean {
         return true;
+    }
+
+    private async processAnswer(ctx, userId: number, chatId: number, answer: Action) {
+        if (answer.text) {
+            await this.ratingService.changeRating(userId, chatId, answer.ratingChange)
+            ctx.reply(answer.text)
+        }
     }
 
     private extractUserId(ctx) {

@@ -1,4 +1,4 @@
-
+import moment, {Duration} from "moment/moment";
 
 export class RetryStorage {
 
@@ -8,10 +8,9 @@ export class RetryStorage {
         let alerts = this.storage.get(new Id(userId, chatId).hash()) || []
         let alertMap = new Map<string, Alert>();
         alerts.forEach(a => {
-            let oneHourBefore = new Date();
-            oneHourBefore.setHours(oneHourBefore.getHours() - 1);
+            let expirationTime = moment().subtract(a.duration).toDate();
 
-            if (oneHourBefore.getTime() < a.lastUpdate.getTime()) {
+            if (expirationTime.getTime() < a.lastUpdate.getTime()) {
                 alertMap.set(a.actionType, a);
             }
         })
@@ -53,16 +52,19 @@ class Id {
 }
 
 export class Alert {
-    constructor(userId: number, chatId: number, actionType: string) {
+    constructor(userId: number, chatId: number, actionType: string, duration: Duration) {
         this.userId = userId;
         this.chatId = chatId;
         this.actionType = actionType;
         this.occasions = 1;
+        this.duration = duration;
     }
 
     userId: number;
     chatId: number;
     actionType: string;
     occasions: number;
-    lastUpdate: Date
+    lastUpdate: Date;
+    duration: Duration; // moment.Duration(1, 'day');
+
 }

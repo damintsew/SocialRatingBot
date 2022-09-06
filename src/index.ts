@@ -1,12 +1,12 @@
 import {env} from "node:process";
-import {Scenes, session, Telegraf} from "telegraf";
+import {Middleware, Scenes, session, Telegraf} from "telegraf";
 import {MyContext} from "./domain/Domain";
 import {RatingService} from "./service/RatingService";
 import {UserDao} from "./dao/UserDao";
 import {RatingDao} from "./dao/RatingDao";
 import {TextProcessingService} from "./service/TextProcessingService";
 import {CronJobService} from "./service/CronJobService";
-import {RatingTgAdapter} from "./service/RatingTgAdapter";
+import {RatingTgAdapter} from "./adapter/RatingTgAdapter";
 
 const ratingDao = new RatingDao()
 const userService = new UserDao()
@@ -34,7 +34,7 @@ bot.telegram.deleteMyCommands()
 
 bot.use(session())
 bot.use(stage.middleware())
-bot.use(async (ctx, next) => {
+bot.use(async (ctx: MyContext, next) => {
 
     if (!ctx?.session?.isUserSaved) {
         if (ctx.message == null || ctx.message.from == null || ctx.message.from.id == null) {
@@ -59,7 +59,7 @@ bot.use(async (ctx, next) => {
     return next()
 })
 
-bot.command('rating', async (ctx) => {
+bot.command('rating', async (ctx: MyContext) => {
     let userId = ctx.message.from.id;
     let chatId = ctx.message.chat.id
     const user = await userService.getUser(userId, chatId);
@@ -89,7 +89,6 @@ bot.on('sticker', async (ctx) => {
 
 bot.launch()
 cronJobService.start()
-
 
 process.once('SIGINT', () => {
     bot.stop('SIGINT')

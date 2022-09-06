@@ -1,5 +1,5 @@
-import {RatingService} from "./RatingService";
-import {DomainToTgMapper} from "./mapper/DomainToTgMapper";
+import {RatingService} from "../service/RatingService";
+import {DomainToTgMapper} from "../service/mapper/DomainToTgMapper";
 import {Telegraf} from "telegraf";
 
 export class RatingTgAdapter {

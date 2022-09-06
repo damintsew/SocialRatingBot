@@ -5,8 +5,13 @@ export class PutinProcessor implements TextProcessor {
 
     keyPhrases(): string[] {
         return [
+            "аве путин",
+            "аве путину",
             "слава путину",
             "великий путин",
+            "путин - россия",
+            "путин - россия",
+            "путин это россия",
         ];
     }
 

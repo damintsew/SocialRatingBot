@@ -1,15 +1,12 @@
 
-export abstract class Reply {
+export interface Reply {
 
-    abstract getType(): AnswerType;
-    // data: any
+    getType(): AnswerType;
 }
 
-export class TextReply extends Reply {
-
+export class TextReply implements Reply {
 
     constructor(text: string) {
-        super();
         this.text = text;
     }
 
@@ -20,9 +17,10 @@ export class TextReply extends Reply {
     text: string
 }
 
-export class ImageTextReply extends TextReply {
+export class ImageTextReply extends TextReply implements Reply{
 
     sendSeparately: boolean
+    imagePath: any
 
     constructor(text: string, image: any, sendSeparately?: boolean) {
         super(text);
@@ -33,8 +31,6 @@ export class ImageTextReply extends TextReply {
     getType(): AnswerType {
         return AnswerType.IMAGE_TEXT;
     }
-
-    imagePath: any
 }
 
 export enum AnswerType {

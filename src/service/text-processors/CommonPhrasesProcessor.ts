@@ -61,3 +61,58 @@ export class OffensivePhrasesProcessor extends StatePersistentProcessor {
         return true;
     }
 }
+
+export class MinusRiseProcessor extends StatePersistentProcessor {
+
+    getActionType(): string {
+        return "MINUS_RISE";
+    }
+
+    getActions(): Action[] {
+        return [new Action([
+            "Кому ?",
+            "Кому ? Кому ?"])];
+    }
+
+    keyPhrases(): string[] {
+        return [
+            "минус рис",
+        ];
+    }
+
+    protected shouldNotifyWhenReplyMessageNull(): boolean {
+        return false;
+    }
+
+    useReplyToMessage(): boolean {
+        return true;
+    }
+}
+
+export class TaiwanProcessor extends StatePersistentProcessor {
+
+    getActionType(): string {
+        return "TAIWAN";
+    }
+
+    getActions(): Action[] {
+        return [
+            new Action(["Твоя поддерживать тайвань !?"]),
+            new Action(["Тайвань есть Китай! Китай есть Тайвань! Минус рис!"], -10),
+        ];
+    }
+
+    keyPhrases(): string[] {
+        return [
+            "свободный тайвань",
+        ];
+    }
+
+    protected shouldNotifyWhenReplyMessageNull(): boolean {
+        return false;
+    }
+
+    useReplyToMessage(): boolean {
+        return true;
+    }
+}
