@@ -9,7 +9,8 @@ export class CommonPhrasesProcessor extends StatePersistentProcessor {
     }
 
     getActions(): Action[] {
-        return [new Action("Радовать Партия! Плюс рейтинг", 5)];
+        return [new Action(["Радовать Партия! Плюс рейтинг",
+            "👍", "❤️"], 5)];
     }
 
     keyPhrases(): string[] {

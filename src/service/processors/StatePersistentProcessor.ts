@@ -84,10 +84,8 @@ export abstract class StatePersistentProcessor implements TextProcessor {
             if (ctx.message.reply_to_message == null) {
                 if (this.shouldNotifyWhenReplyMessageNull()) {
                     ctx.reply("Указать какой сообщений! Кому давать или забирать рис!");
-                    return [undefined, undefined]
-                } else {
-                    return [undefined, undefined]
                 }
+                return [undefined, undefined]
             }
             userId = ctx.message.reply_to_message.from.id
             chatId = ctx.message.reply_to_message.chat.id
