@@ -7,7 +7,7 @@ export class UserDao {
         dataSource.initialize();
     }
 
-    async getUser(userId: number, chatId: number) {
+    async getUser(userId: number) {
         return await dataSource.createQueryBuilder()
             .select("user")
             .from(User, "user")

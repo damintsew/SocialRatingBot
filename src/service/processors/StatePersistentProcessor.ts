@@ -17,6 +17,9 @@ export abstract class StatePersistentProcessor implements TextProcessor {
 
     async processRequest(ctx) {
         let [userId, chatId] = this.extractUserId(ctx)
+        if (userId == undefined || chatId == undefined) {
+            return;
+        }
 
         let alert = this.retryStorage.get(userId, chatId)
             .get(this.getActionType());
@@ -80,9 +83,10 @@ export abstract class StatePersistentProcessor implements TextProcessor {
         if (this.useReplyToMessage()) {
             if (ctx.message.reply_to_message == null) {
                 if (this.shouldNotifyWhenReplyMessageNull()) {
-                    return ctx.reply("Указать какой сообщений! Кому давать или забирать рис!");
+                    ctx.reply("Указать какой сообщений! Кому давать или забирать рис!");
+                    return [undefined, undefined]
                 } else {
-                    return
+                    return [undefined, undefined]
                 }
             }
             userId = ctx.message.reply_to_message.from.id

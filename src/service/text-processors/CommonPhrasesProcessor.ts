@@ -1,4 +1,4 @@
-import {StatePersistentProcessor} from "../retry/StatePersistentProcessor";
+import {StatePersistentProcessor} from "../processors/StatePersistentProcessor";
 import {Action} from "../../api/Action";
 
 

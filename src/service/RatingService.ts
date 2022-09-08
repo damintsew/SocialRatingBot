@@ -15,7 +15,7 @@ export class RatingService {
 
     async changeRating(userId: number, chatId: number, ratingValue: number) {
         const userWithRating = await this.dao.getRating(userId, chatId);
-        const user = await this.userDao.getUser(userId, chatId);
+        const user = await this.userDao.getUser(userId);
         if (userWithRating == null) {
             await this.dao.addUserSocialRating(userId, chatId);
         }

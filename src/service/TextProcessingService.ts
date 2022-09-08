@@ -2,7 +2,7 @@ import {RatingService} from "./RatingService";
 import {AllahProcessor} from "./text-processors/AllahProcessor";
 import {TextProcessor} from "../api/TextProcessor";
 import {PutinProcessor} from "./text-processors/PutinProcessor";
-import {RetryStorage} from "./retry/RetryStorage";
+import {RetryStorage} from "./processors/RetryStorage";
 import {GreatChinaProcessor} from "./text-processors/GreatChinaProcessor";
 import {BayanProcessor} from "./text-processors/BayanProcessor";
 import {
@@ -36,17 +36,21 @@ export class TextProcessingService {
 
         const text = ctx.message.text.toLowerCase()
 
-        for (let processor of this.textProcessors) {
-            const phrases = processor.keyPhrases()
+        try {
+            for (let processor of this.textProcessors) {
+                const phrases = processor.keyPhrases()
 
-            let match = this.matchesText(phrases, text);
+                let match = this.matchesText(phrases, text);
 
-            if (match) {
-                processor.processRequest(ctx)
-                if (!processor.shouldContinue()) {
-                    break;
+                if (match) {
+                    processor.processRequest(ctx)
+                    if (!processor.shouldContinue()) {
+                        break;
+                    }
                 }
             }
+        } catch (e) {
+            console.error(`Error during processing text = ${text}`, e)
         }
     }
 

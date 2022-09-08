@@ -1,6 +1,7 @@
 import {DataSource} from "typeorm";
 import { env } from 'node:process';
 import {User, UserSocialRating} from "../entity/User";
+import {Message} from "../entity/Message";
 
 export const dataSource = new DataSource({
             type: "postgres",
@@ -10,7 +11,7 @@ export const dataSource = new DataSource({
             password: "changeme",
             database: "social_rating",
             entities: [
-                User, UserSocialRating
+                User, UserSocialRating, Message
             ],
             synchronize: true,
             logging: true

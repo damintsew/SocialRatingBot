@@ -7,9 +7,12 @@ import {RatingDao} from "./dao/RatingDao";
 import {TextProcessingService} from "./service/TextProcessingService";
 import {CronJobService} from "./service/CronJobService";
 import {RatingTgAdapter} from "./adapter/RatingTgAdapter";
+import MessageStatisticService from "./service/MessageStatisticService";
+import {MessageDao} from "./dao/MessageDao";
 
 const ratingDao = new RatingDao()
-const userService = new UserDao()
+const userDao = new UserDao()
+const messageDao = new MessageDao()
 
 
 const token = env.TG_TOKEN
@@ -18,7 +21,8 @@ if (token === undefined) {
 }
 const bot = new Telegraf<MyContext>(token)
 
-const ratingService = new RatingService(ratingDao, userService)
+const messageStatisticService = new MessageStatisticService(messageDao, userDao)
+const ratingService = new RatingService(ratingDao, userDao)
 const textProcessingService = new TextProcessingService(ratingService)
 const ratingAdapter = new RatingTgAdapter(ratingService, bot);
 
@@ -41,9 +45,9 @@ bot.use(async (ctx: MyContext, next) => {
             return next();
         }
         const user = ctx?.message?.from;
-        const userFromDB = await userService.getUser(user.id, ctx.message.chat.id);
+        const userFromDB = await userDao.getUser(user.id);
         if (userFromDB == null) {
-            ctx.session.user = await userService.addUser(user, ctx.message.chat.id);
+            ctx.session.user = await userDao.addUser(user, ctx.message.chat.id);
         } else {
             ctx.session.user = userFromDB;
         }
@@ -62,7 +66,7 @@ bot.use(async (ctx: MyContext, next) => {
 bot.command('rating', async (ctx: MyContext) => {
     let userId = ctx.message.from.id;
     let chatId = ctx.message.chat.id
-    const user = await userService.getUser(userId, chatId);
+    const user = await userDao.getUser(userId);
     const userRating = await ratingService.getRating(userId, chatId);
     if (userRating != null) {
         ctx.reply(`${user?.firstName} твой рейтинг ${userRating.socialRating}`)
@@ -77,7 +81,11 @@ bot.command('rating_all', async (ctx) => {
 });
 
 bot.on('text', async (ctx) => {
+    let userId = ctx.message.from.id;
+    let chatId = ctx.message.chat.id
+
     await textProcessingService.processText(ctx)
+    await messageStatisticService.saveMessage(userId, chatId, ctx.message.text, ctx.message.message_id)
 })
 
 bot.on('sticker', async (ctx) => {
