@@ -1,8 +1,9 @@
 import {Alert, RetryStorage} from "./RetryStorage";
-import {Action} from "../../api/Action";
+import {Action, ProbabilityAction} from "../../api/Action";
 import {TextProcessor} from "../../api/TextProcessor";
 import {RatingService} from "../RatingService";
 import moment, {Duration} from "moment/moment";
+import IncomeTextMessage, {MessageProps} from "../../domain/IncomeTextMessage";
 
 
 export abstract class StatePersistentProcessor implements TextProcessor {
@@ -15,24 +16,41 @@ export abstract class StatePersistentProcessor implements TextProcessor {
         this.ratingService = ratingService;
     }
 
-    async processRequest(ctx) {
-        let [userId, chatId] = this.extractUserId(ctx)
-        if (userId == undefined || chatId == undefined) {
+    async processRequest(income: IncomeTextMessage, ctx) {
+        let messageProps = this.extractUserId(income, ctx)
+        if (messageProps == null) {
             return;
         }
 
-        let alert = this.retryStorage.get(userId, chatId)
+        let alert = this.retryStorage.getBy(messageProps)
             .get(this.getActionType());
 
         if (alert == null) {
-            alert = new Alert(userId, chatId, this.getActionType(), this.getAlertDuration())
+            alert = new Alert(messageProps, this.getActionType(), this.getAlertDuration())
         }
 
         let answer = this.findAnswer(alert)
-        await this.processAnswer(ctx, userId, chatId, answer)
+        await this.processAnswer(ctx, messageProps, answer)
 
         alert.occasions += 1
         this.retryStorage.save(alert)
+    }
+
+    private findAnswer(alert): Action {
+        let availableActions = this.getActions()
+
+        if (availableActions.length == 1) {
+            return availableActions[0]
+        }
+        if (availableActions.length <= alert.occasions) {
+            return availableActions[availableActions.length - 1]
+        }
+        return availableActions[alert.occasions - 1]
+    }
+
+    // todo move to util
+    private probability(value: number): boolean {
+        return Math.random() < value;
     }
 
     abstract getActionType(): string
@@ -53,51 +71,41 @@ export abstract class StatePersistentProcessor implements TextProcessor {
         return moment.duration(1, 'day');
     }
 
-    private findAnswer(alert): Action {
-        let availableActions = this.getActions()
-
-        if (availableActions.length == 1) {
-            return availableActions[0]
-        }
-        if (availableActions.length <= alert.occasions) {
-            return availableActions[availableActions.length - 1]
-        }
-        return availableActions[alert.occasions - 1]
-    }
-
     protected shouldNotifyWhenReplyMessageNull(): boolean {
         return true;
     }
 
-    private async processAnswer(ctx, userId: number, chatId: number, answer: Action) {
-        if (answer.text) {
-            await this.ratingService.changeRating(userId, chatId, answer.ratingChange)
-            ctx.reply(answer.text)
+    private async processAnswer(ctx, messageProps: MessageProps, answer: Action) {
+        //todo move this to better place
+        if (answer instanceof ProbabilityAction) {
+            if (!this.probability(answer.probability)) {
+                return null;
+            }
         }
+
+        await this.ratingService.changeRating(messageProps.userId, messageProps.chatId, answer.ratingChange)
+        ctx.reply(answer.text)
     }
 
-    private extractUserId(ctx) {
-        let userId: string;
-        let chatId: string;
+    private extractUserId(income: IncomeTextMessage, ctx): MessageProps {
+        let messageProps
 
         if (this.useReplyToMessage()) {
-            if (ctx.message.reply_to_message == null) {
+            if (income.replyTo == null) {
                 if (this.shouldNotifyWhenReplyMessageNull()) {
                     ctx.reply("Указать какой сообщений! Кому давать или забирать рис!");
                 }
-                return [undefined, undefined]
+                return null
             }
-            userId = ctx.message.reply_to_message.from.id
-            chatId = ctx.message.reply_to_message.chat.id
+            messageProps = income.replyTo
 
-            if (userId === ctx.message.from.id && chatId === ctx.message.chat.id) {
+            if (income.from.equals(income.replyTo)) {
                 return ctx.reply("Хотеть набить себя рейтинг?")
             }
         } else {
-            userId = ctx.message.from.id
-            chatId = ctx.message.chat.id
+            messageProps = income.from
         }
 
-        return [userId, chatId]
+        return messageProps
     }
 }

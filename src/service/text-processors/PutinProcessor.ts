@@ -1,4 +1,5 @@
 import {TextProcessor} from "../../api/TextProcessor";
+import IncomeTextMessage from "../../domain/IncomeTextMessage";
 
 
 export class PutinProcessor implements TextProcessor {
@@ -15,7 +16,7 @@ export class PutinProcessor implements TextProcessor {
         ];
     }
 
-    processRequest(ctx) {
+    processRequest(_income: IncomeTextMessage, ctx) {
         let replyText = "Ты че 搞砸了 ??"
         ctx.reply(replyText)
     }

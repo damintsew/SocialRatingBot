@@ -11,6 +11,7 @@ import {
     OffensivePhrasesProcessor,
     TaiwanProcessor
 } from "./text-processors/CommonPhrasesProcessor";
+import IncomeTextMessage from "../domain/IncomeTextMessage";
 
 export class TextProcessingService {
 
@@ -31,19 +32,17 @@ export class TextProcessingService {
         this.textProcessors.push(new TaiwanProcessor(this.retryStorage, ratingService));
     }
 
-    async processText(ctx) {
-        console.log(`from = ${ctx.message.from.id} chatId = ${ctx.message.from.id} message = ${ctx.message.text} `)
+    async processText(income: IncomeTextMessage, ctx) {
+        console.log(`from = ${income.from.userId} chatId = ${income.from.chatId} message = ${income.text} `)
 
-        const text = ctx.message.text.toLowerCase()
-
+        const text = income.text.toLowerCase()
         try {
             for (let processor of this.textProcessors) {
                 const phrases = processor.keyPhrases()
 
                 let match = this.matchesText(phrases, text);
-
                 if (match) {
-                    processor.processRequest(ctx)
+                    processor.processRequest(income, ctx)
                     if (!processor.shouldContinue()) {
                         break;
                     }
@@ -56,7 +55,6 @@ export class TextProcessingService {
 
     private matchesText(phrases: string[], text: string) {
         let match = false;
-
 
         for (let keyPhrase of phrases) {
             if (text.includes(keyPhrase)) {

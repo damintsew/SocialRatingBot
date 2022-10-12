@@ -1,8 +1,13 @@
 import moment, {Duration} from "moment/moment";
+import {MessageProps} from "../../domain/IncomeTextMessage";
 
 export class RetryStorage {
 
     private storage: Map<string, Alert[]> = new Map<string, Alert[]>()
+
+    getBy(messageProps: MessageProps): Map<string, Alert> {
+        return this.get(messageProps.userId, messageProps.chatId)
+    }
 
     get(userId: number, chatId: number): Map<string, Alert> {
         let alerts = this.storage.get(new Id(userId, chatId).hash()) || []
@@ -18,7 +23,7 @@ export class RetryStorage {
     }
 
     save(alert: Alert) {
-        const id = new Id(alert.userId, alert.chatId);
+        const id = Id.fromMessageProps(alert.messageProps);
         alert.lastUpdate = new Date();
 
         let alertsById = this.storage.get(id.hash()) || new Map<string, Alert>(); // todo find why null is here
@@ -45,6 +50,9 @@ class Id {
         this.userId = userId;
         this.chatId = chatId;
     }
+    static fromMessageProps(messageProps: MessageProps) {
+        return new this(messageProps.userId, messageProps.chatId);
+    }
 
     hash(): string {
         return this.userId.toString() + "_" + this.chatId.toString();
@@ -52,16 +60,14 @@ class Id {
 }
 
 export class Alert {
-    constructor(userId: number, chatId: number, actionType: string, duration: Duration) {
-        this.userId = userId;
-        this.chatId = chatId;
+    constructor(messageProps: MessageProps , actionType: string, duration: Duration) {
+        this.messageProps = messageProps;
         this.actionType = actionType;
         this.occasions = 1;
         this.duration = duration;
     }
 
-    userId: number;
-    chatId: number;
+    messageProps: MessageProps;
     actionType: string;
     occasions: number;
     lastUpdate: Date;

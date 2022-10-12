@@ -1,5 +1,5 @@
 import {env} from "node:process";
-import {Middleware, Scenes, session, Telegraf} from "telegraf";
+import {Scenes, session, Telegraf} from "telegraf";
 import {MyContext} from "./domain/Domain";
 import {RatingService} from "./service/RatingService";
 import {UserDao} from "./dao/UserDao";
@@ -9,6 +9,7 @@ import {CronJobService} from "./service/CronJobService";
 import {RatingTgAdapter} from "./adapter/RatingTgAdapter";
 import MessageStatisticService from "./service/MessageStatisticService";
 import {MessageDao} from "./dao/MessageDao";
+import IncomeTextMessage, {MessageProps} from "./domain/IncomeTextMessage";
 
 const ratingDao = new RatingDao()
 const userDao = new UserDao()
@@ -81,11 +82,24 @@ bot.command('rating_all', async (ctx) => {
 });
 
 bot.on('text', async (ctx) => {
-    let userId = ctx.message.from.id;
-    let chatId = ctx.message.chat.id
+    const income = {
+        from: {
+            userId: ctx.message.from.id,
+            chatId: ctx.message.chat.id
+        },
+        text: ctx.message.text
+    } as IncomeTextMessage
 
-    await textProcessingService.processText(ctx)
-    await messageStatisticService.saveMessage(userId, chatId, ctx.message.text, ctx.message.message_id)
+    if (ctx.message.reply_to_message != null) {
+        income.replyTo = {
+            userId: ctx.message.reply_to_message.from.id,
+            chatId: ctx.message.reply_to_message.chat.id
+        } as MessageProps
+    }
+
+    await textProcessingService.processText(income, ctx)
+    await messageStatisticService.saveMessage(income.from.userId, income.from.chatId,
+        ctx.message.text, ctx.message.message_id)
 })
 
 bot.on('sticker', async (ctx) => {

@@ -1,3 +1,4 @@
+import IncomeTextMessage from "../domain/IncomeTextMessage";
 
 
 export abstract class TextProcessor {
@@ -6,5 +7,5 @@ export abstract class TextProcessor {
 
     abstract shouldContinue(): boolean
 
-    abstract processRequest(ctx)
+    abstract processRequest(income: IncomeTextMessage, ctx)
 }

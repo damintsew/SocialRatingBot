@@ -30,3 +30,13 @@ export class Action {
         return Math.floor(Math.random() * max) + 1;
     }
 }
+
+export class ProbabilityAction extends Action {
+    probability: number;
+
+    constructor(text: string | string[], ratingChange: number, probability: number) {
+        super(text, ratingChange);
+        this.probability = probability;
+    }
+
+}

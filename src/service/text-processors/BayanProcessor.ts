@@ -21,7 +21,7 @@ export class BayanProcessor extends StatePersistentProcessor implements TextProc
                 "Постить баян - рсатраивать Партия",
                 "Твоя деятельность расстраивает Партия!"
             ]),
-            new Action("Минус рис", -5),
+            new Action(["Минус рис", "Искать годный контент!"], -5),
         ];
     }
 

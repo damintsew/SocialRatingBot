@@ -40,8 +40,7 @@ export class OffensivePhrasesProcessor extends StatePersistentProcessor {
 
     getActions(): Action[] {
         return [new Action([
-            "Ничтожество! Минус рис!",
-            "Твоя прекращать!"], -10)];
+            "Ничтожество! Минус рис!", "Твоя прекращать!"], -10)];
     }
 
     keyPhrases(): string[] {
@@ -106,6 +105,8 @@ export class TaiwanProcessor extends StatePersistentProcessor {
     keyPhrases(): string[] {
         return [
             "свободный тайвань",
+            "тайвань не китай",
+            "тайвань не принадлежит китаю",
         ];
     }
 
