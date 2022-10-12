@@ -1,122 +1,119 @@
-import {env} from "node:process";
-import {Scenes, session, Telegraf} from "telegraf";
-import {MyContext} from "./domain/Domain";
-import {RatingService} from "./service/RatingService";
-import {UserDao} from "./dao/UserDao";
-import {RatingDao} from "./dao/RatingDao";
-import {TextProcessingService} from "./service/TextProcessingService";
-import {CronJobService} from "./service/CronJobService";
-import {RatingTgAdapter} from "./adapter/RatingTgAdapter";
-import MessageStatisticService from "./service/MessageStatisticService";
-import {MessageDao} from "./dao/MessageDao";
-import IncomeTextMessage, {MessageProps} from "./domain/IncomeTextMessage";
+import { Bot, Context, session, SessionFlavor } from 'grammy'
+import { Menu, MenuRange } from '@grammyjs/menu'
 
-const ratingDao = new RatingDao()
-const userDao = new UserDao()
-const messageDao = new MessageDao()
-
-
-const token = env.TG_TOKEN
-if (token === undefined) {
-    throw new Error('BOT_TOKEN must be provided!')
+/** This is how the dishes look that this bot is managing */
+interface Dish {
+    id: string
+    name: string
 }
-const bot = new Telegraf<MyContext>(token)
 
-const messageStatisticService = new MessageStatisticService(messageDao, userDao)
-const ratingService = new RatingService(ratingDao, userDao)
-const textProcessingService = new TextProcessingService(ratingService)
-const ratingAdapter = new RatingTgAdapter(ratingService, bot);
+interface SessionData {
+    favoriteIds: string[]
+}
+type MyContext = Context & SessionFlavor<SessionData>
 
-const cronJobService = new CronJobService(ratingAdapter)
+/**
+ * All known dishes. Users can rate them to store which ones are their favorite
+ * dishes.
+ *
+ * They can also decide to delete them. If a user decides to delete a dish, it
+ * will be gone for everyone.
+ */
+const dishDatabase: Dish[] = [
+    { id: 'pasta', name: 'Pasta' },
+    { id: 'pizza', name: 'Pizza' },
+    { id: 'sushi', name: 'Sushi' },
+    { id: 'entrct', name: 'Entrecôte' },
+]
 
-const stage = new Scenes.Stage<MyContext>()
+const bot = new Bot<MyContext>('5220606033:AAFvlqk47pUZgnQKn4_NVhigzz3Sx3WfZzs')
 
-bot.telegram.deleteMyCommands()
-    .then(() => bot.telegram.setMyCommands([
-        {command: 'rating', description: 'Показать личный рейтинг'},
-        {command: 'rating_all', description: 'Показать лучший друг Си'}
-    ]));
-
-bot.use(session())
-bot.use(stage.middleware())
-bot.use(async (ctx: MyContext, next) => {
-
-    if (!ctx?.session?.isUserSaved) {
-        if (ctx.message == null || ctx.message.from == null || ctx.message.from.id == null) {
-            return next();
-        }
-        const user = ctx?.message?.from;
-        const userFromDB = await userDao.getUser(user.id);
-        if (userFromDB == null) {
-            ctx.session.user = await userDao.addUser(user, ctx.message.chat.id);
-        } else {
-            ctx.session.user = userFromDB;
-        }
-        ctx.session.isUserSaved = true;
-    }
-
-    const userId = Number.parseInt(ctx.session.user.userId, 10)
-    const userRating = await ratingService.getRating(userId, ctx.chat.id);
-    if (userRating == null) {
-        await ratingService.addUserSocialRating(userId, ctx.chat.id);
-    }
-
-    return next()
-})
-
-bot.command('rating', async (ctx: MyContext) => {
-    let userId = ctx.message.from.id;
-    let chatId = ctx.message.chat.id
-    const user = await userDao.getUser(userId);
-    const userRating = await ratingService.getRating(userId, chatId);
-    if (userRating != null) {
-        ctx.reply(`${user?.firstName} твой рейтинг ${userRating.socialRating}`)
-    } else {
-        await ratingService.addUserSocialRating(userId, chatId);
-        ctx.reply(`${user?.firstName} твой рейтинг 100`)
-    }
-});
-
-bot.command('rating_all', async (ctx) => {
-    await ratingAdapter.prepareRatingMessage(ctx)
-});
-
-bot.on('text', async (ctx) => {
-    const income = {
-        from: {
-            userId: ctx.message.from.id,
-            chatId: ctx.message.chat.id
+bot.use(
+    session({
+        initial(): SessionData {
+            return { favoriteIds: [] }
         },
-        text: ctx.message.text
-    } as IncomeTextMessage
+    })
+)
 
-    if (ctx.message.reply_to_message != null) {
-        income.replyTo = {
-            userId: ctx.message.reply_to_message.from.id,
-            chatId: ctx.message.reply_to_message.chat.id
-        } as MessageProps
+// Create a dynamic menu that lists all dishes in the dishDatabase,
+// one button each
+const mainText = 'Pick a dish to rate it!'
+const mainMenu = new Menu<MyContext>('food')
+mainMenu.dynamic(() => {
+    const range = new MenuRange<MyContext>()
+    for (const dish of dishDatabase) {
+        range
+            .submenu(
+                { text: dish.name, payload: dish.id }, // label and payload
+                'dish', // navigation target menu
+                ctx =>
+                    ctx.editMessageText(dishText(dish.name), {
+                        parse_mode: 'HTML',
+                    }) // handler
+            )
+            .row()
     }
-
-    await textProcessingService.processText(income, ctx)
-    await messageStatisticService.saveMessage(income.from.userId, income.from.chatId,
-        ctx.message.text, ctx.message.message_id)
+    return range
 })
 
-bot.on('sticker', async (ctx) => {
-    console.log(ctx);
-    if (ctx.message.sticker != null && ctx.message.reply_to_message != null) {
-        await ratingService.processSticker(ctx)
+// Create the sub-menu that is used for rendering dishes
+const dishText = (dish: string) => `<b>${dish}</b>\n\nYour rating:`
+const dishMenu = new Menu<MyContext>('dish')
+dishMenu.dynamic(ctx => {
+    const dish = ctx.match
+    if (typeof dish !== 'string') throw new Error('No dish chosen!')
+    return createDishMenu(dish)
+})
+/** Creates a menu that can render any given dish */
+function createDishMenu(dish: string) {
+    return new MenuRange<MyContext>()
+        .text(
+            {
+                text: ctx =>
+                    ctx.session.favoriteIds.includes(dish) ? 'Yummy!' : 'Meh.',
+                payload: dish,
+            },
+            ctx => {
+                const set = new Set(ctx.session.favoriteIds)
+                if (!set.delete(dish)) set.add(dish)
+                ctx.session.favoriteIds = Array.from(set.values())
+                ctx.menu.update()
+            }
+        )
+        .row()
+        .back({ text: 'X Delete', payload: dish }, async ctx => {
+            const index = dishDatabase.findIndex(d => d.id === dish)
+            dishDatabase.splice(index, 1)
+            await ctx.editMessageText('Pick a dish to rate it!')
+        })
+        .row()
+        .back({ text: 'Back', payload: dish })
+}
+
+mainMenu.register(dishMenu)
+
+bot.use(mainMenu)
+
+bot.command('start', ctx => ctx.reply(mainText, { reply_markup: mainMenu }))
+bot.command('help', async ctx => {
+    const text =
+        'Send /start to see and rate dishes. Send /fav to list your favorites!'
+    await ctx.reply(text)
+})
+bot.command('fav', async ctx => {
+    const favs = ctx.session.favoriteIds
+    if (favs.length === 0) {
+        await ctx.reply('You do not have any favorites yet!')
+        return
     }
-});
-
-bot.launch()
-cronJobService.start()
-
-process.once('SIGINT', () => {
-    bot.stop('SIGINT')
-    cronJobService.stop();
+    const names = favs
+        .map(id => dishDatabase.find(dish => dish.id === id))
+        .filter((dish): dish is Dish => dish !== undefined)
+        .map(dish => dish.name)
+        .join('\n')
+    await ctx.reply(`Those are your favorite dishes:\n\n${names}`)
 })
-process.once('SIGTERM', () => {
-    bot.stop('SIGTERM')
-    cronJobService.stop();
-})
+
+bot.catch(console.error.bind(console))
+bot.start()
